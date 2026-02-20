@@ -1,6 +1,39 @@
-assets/*
-!assets/.gitignore
-protected/runtime/*
-!protected/runtime/.gitignore
-protected/data/*.db
-themes/classic/views/
+# Yii2
+/vendor/
+/runtime/
+/web/assets/
+/web/index-test.php
+
+# Secrets
+/.env
+
+# Vagrant (not used, Docker-based project)
+/vagrant/
+Vagrantfile
+
+# Legacy Bower
+.bowerrc
+
+# Windows-only
+yii.bat
+
+# Local dev notes
+CLAUDE.md
+
+# Composer
+composer.phar
+
+# IDE
+/.idea/
+/.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node
+/node_modules/
