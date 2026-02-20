@@ -4,10 +4,10 @@ namespace app\controllers;
 
 use Yii;
 use app\models\Author;
-use app\models\Book;
 use app\models\SubscriptionForm;
+use app\services\AuthorService;
+use yii\base\Module;
 use yii\data\ActiveDataProvider;
-use yii\db\Query;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -15,6 +15,15 @@ use yii\web\NotFoundHttpException;
 
 class AuthorController extends Controller
 {
+    public function __construct(
+        string $id,
+        Module $module,
+        private readonly AuthorService $authorService,
+        array $config = []
+    ) {
+        parent::__construct($id, $module, $config);
+    }
+
     public function behaviors(): array
     {
         return [
@@ -94,38 +103,10 @@ class AuthorController extends Controller
 
     public function actionDelete(int $id)
     {
-        $author = $this->findModel($id);
-        $transaction = Yii::$app->db->beginTransaction();
         try {
-            // Find books where this author is the sole author
-            $soloBookIds = (new Query())
-                ->select('book_id')
-                ->from('{{%book_author}}')
-                ->where(['author_id' => $id])
-                ->andWhere(['book_id' => (new Query())
-                    ->select('book_id')
-                    ->from('{{%book_author}}')
-                    ->groupBy('book_id')
-                    ->having('COUNT(*) = 1'),
-                ])
-                ->column();
-
-            // Delete solo books and their cover images
-            foreach (Book::findAll($soloBookIds) as $book) {
-                if ($book->cover_image) {
-                    $path = Book::getUploadDir() . $book->cover_image;
-                    if (is_file($path)) {
-                        unlink($path);
-                    }
-                }
-                $book->delete();
-            }
-
-            $author->delete();
-            $transaction->commit();
+            $this->authorService->delete($this->findModel($id));
             Yii::$app->session->setFlash('success', 'Author deleted.');
         } catch (\Throwable $e) {
-            $transaction->rollBack();
             Yii::error('Author delete failed: ' . $e->getMessage(), 'author');
             Yii::$app->session->setFlash('error', 'Could not delete author. Please try again.');
         }

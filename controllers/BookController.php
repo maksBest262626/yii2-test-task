@@ -5,7 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Book;
 use app\models\Author;
-use app\services\NotificationService;
+use app\services\BookService;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -19,7 +19,7 @@ class BookController extends Controller
     public function __construct(
         string $id,
         Module $module,
-        private readonly NotificationService $notificationService,
+        private readonly BookService $bookService,
         array $config = []
     ) {
         parent::__construct($id, $module, $config);
@@ -104,29 +104,11 @@ class BookController extends Controller
             $model->imageFile = UploadedFile::getInstance($model, 'imageFile');
 
             if ($model->validate()) {
-                $transaction = Yii::$app->db->beginTransaction();
                 try {
-                    if ($model->imageFile) {
-                        $uploadPath = Book::getUploadDir();
-                        $fileName = uniqid('book_') . '.' . $model->imageFile->extension;
-                        if (!$model->imageFile->saveAs($uploadPath . $fileName)) {
-                            throw new \RuntimeException('Failed to save cover image.');
-                        }
-                        $model->cover_image = $fileName;
-                    }
-
-                    if (!$model->save(false)) {
-                        throw new \RuntimeException('Failed to save book.');
-                    }
-
-                    $model->saveAuthors($authorIds);
-                    $transaction->commit();
-
-                    $this->notificationService->notifyAboutNewBook($model, $authorIds);
+                    $this->bookService->create($model, $authorIds);
                     Yii::$app->session->setFlash('success', 'Book created successfully.');
                     return $this->redirect(['view', 'id' => $model->id]);
-                } catch (\Exception $e) {
-                    $transaction->rollBack();
+                } catch (\Throwable $e) {
                     Yii::error($e->getMessage(), 'book');
                     Yii::$app->session->setFlash('danger', 'Failed to create book. Please try again.');
                 }
@@ -156,28 +138,11 @@ class BookController extends Controller
             $model->imageFile = UploadedFile::getInstance($model, 'imageFile');
 
             if ($model->validate()) {
-                $transaction = Yii::$app->db->beginTransaction();
                 try {
-                    if ($model->imageFile) {
-                        $uploadPath = Book::getUploadDir();
-                        $fileName = uniqid('book_') . '.' . $model->imageFile->extension;
-                        if (!$model->imageFile->saveAs($uploadPath . $fileName)) {
-                            throw new \RuntimeException('Failed to save cover image.');
-                        }
-                        $model->cover_image = $fileName;
-                    }
-
-                    if (!$model->save(false)) {
-                        throw new \RuntimeException('Failed to save book.');
-                    }
-
-                    $model->saveAuthors($authorIds);
-                    $transaction->commit();
-
+                    $this->bookService->update($model, $authorIds);
                     Yii::$app->session->setFlash('success', 'Book updated successfully.');
                     return $this->redirect(['view', 'id' => $model->id]);
-                } catch (\Exception $e) {
-                    $transaction->rollBack();
+                } catch (\Throwable $e) {
                     Yii::error($e->getMessage(), 'book');
                     Yii::$app->session->setFlash('danger', 'Failed to update book. Please try again.');
                 }
@@ -192,16 +157,11 @@ class BookController extends Controller
 
     public function actionDelete(int $id)
     {
-        $model = $this->findModel($id);
-
-        if ($model->cover_image) {
-            $path = Book::getUploadDir() . $model->cover_image;
-            if (is_file($path)) {
-                unlink($path);
-            }
+        try {
+            $this->bookService->delete($this->findModel($id));
+        } catch (\Throwable $e) {
+            Yii::error($e->getMessage(), 'book');
         }
-
-        $model->delete();
         Yii::$app->session->setFlash('success', 'Book deleted.');
         return $this->redirect(['index']);
     }
@@ -214,6 +174,4 @@ class BookController extends Controller
         }
         return $model;
     }
-
-
 }

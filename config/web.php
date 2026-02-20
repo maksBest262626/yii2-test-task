@@ -70,10 +70,18 @@ $config = [
             \app\services\SmsPilotService::class => function () use ($params) {
                 return new \app\services\SmsPilotService($params['smsPilotApiKey'] ?? '');
             },
-            \app\services\NotificationService::class => function () use ($params) {
+            \app\services\NotificationService::class => function () {
                 return new \app\services\NotificationService(
                     Yii::$container->get(\app\services\SmsPilotService::class)
                 );
+            },
+            \app\services\BookService::class => function () {
+                return new \app\services\BookService(
+                    Yii::$container->get(\app\services\NotificationService::class)
+                );
+            },
+            \app\services\AuthorService::class => function () {
+                return new \app\services\AuthorService();
             },
         ],
     ],
