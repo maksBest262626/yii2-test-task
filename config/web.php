@@ -41,14 +41,25 @@ $config = [
             ],
         ],
         'db' => $db,
-        /*
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'books' => 'book/index',
+                'books/create' => 'book/create',
+                'books/<id:\d+>' => 'book/view',
+                'books/<id:\d+>/update' => 'book/update',
+                'books/<id:\d+>/delete' => 'book/delete',
+                'authors' => 'author/index',
+                'authors/create' => 'author/create',
+                'authors/<id:\d+>' => 'author/view',
+                'authors/<id:\d+>/update' => 'author/update',
+                'authors/<id:\d+>/delete' => 'author/delete',
+                'report' => 'report/index',
+                'signup' => 'site/signup',
+                'subscriptions/create' => 'subscription/create',
             ],
         ],
-        */
     ],
     'params' => $params,
 ];

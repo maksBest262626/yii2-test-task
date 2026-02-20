@@ -22,6 +22,10 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/app.ini
+
+RUN mkdir -p /tmp && chmod 1777 /tmp
+
 RUN git config --global --add safe.directory /app
 
 WORKDIR /app

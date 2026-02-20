@@ -5,6 +5,6 @@ echo "==> Installing Composer dependencies..."
 cd /app && composer install --no-interaction --prefer-dist
 
 echo "==> Setting directory permissions..."
-chmod -R 777 /app/runtime /app/web/assets
+chmod -R 777 /app/runtime /app/web/assets /app/web/uploads
 
 echo "==> Setup complete!"
