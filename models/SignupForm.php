@@ -42,9 +42,8 @@ class SignupForm extends Model
         $user->email = $this->email;
         $user->setPassword($this->password);
         $user->status = User::STATUS_ACTIVE;
-        $user->created_at = time();
-        $user->updated_at = time();
+        // created_at / updated_at are set automatically by TimestampBehavior
 
-        return $user->save(false) ? $user : null;
+        return $user->save() ? $user : null;
     }
 }

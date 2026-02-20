@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?= Html::a('Edit', ['/author/update', 'id' => $author->id], ['class' => 'btn btn-sm btn-outline-secondary ms-1']) ?>
                                 <?= Html::beginForm(['/author/delete', 'id' => $author->id], 'post', ['style' => 'display:inline']) ?>
                                 <?= Html::submitButton('Delete', ['class' => 'btn btn-sm btn-outline-danger ms-1',
-                                    'onclick' => 'return confirm("Delete this author and all their books?")']) ?>
+                                    'onclick' => 'return confirm("Delete this author? Books where this is the only author will also be deleted.")']) ?>
                                 <?= Html::endForm() ?>
                             <?php endif ?>
                         </td>

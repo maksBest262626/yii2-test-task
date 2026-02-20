@@ -25,20 +25,28 @@ class SubscriptionController extends Controller
     public function actionCreate()
     {
         $form = new SubscriptionForm();
-        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
-            $subscription = new Subscription();
-            $subscription->author_id = $form->author_id;
-            $subscription->phone = $form->phone;
-            if ($subscription->save()) {
-                Yii::$app->session->setFlash('success', 'You have subscribed successfully!');
+        $authorId = null;
+
+        if ($form->load(Yii::$app->request->post())) {
+            $authorId = $form->author_id;
+
+            if ($form->validate()) {
+                $subscription = new Subscription();
+                $subscription->author_id = $form->author_id;
+                $subscription->phone = $form->phone;
+
+                if ($subscription->save()) {
+                    Yii::$app->session->setFlash('success', 'You have subscribed successfully!');
+                } else {
+                    $errors = implode('; ', $subscription->getFirstErrors());
+                    Yii::$app->session->setFlash('error', 'Failed to subscribe. ' . ($errors ?: 'Please try again.'));
+                }
             } else {
-                Yii::$app->session->setFlash('error', 'Failed to subscribe. Please try again.');
+                $errors = implode('; ', $form->getFirstErrors());
+                Yii::$app->session->setFlash('error', 'Invalid data: ' . $errors);
             }
-        } else {
-            Yii::$app->session->setFlash('error', 'Invalid data. ' . implode(' ', array_merge(...array_values($form->getErrors()))));
         }
 
-        $authorId = $form->author_id ?? Yii::$app->request->post('SubscriptionForm')['author_id'] ?? null;
         if ($authorId) {
             return $this->redirect(['/author/view', 'id' => $authorId]);
         }

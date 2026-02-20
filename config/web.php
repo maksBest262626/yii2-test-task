@@ -5,6 +5,7 @@ $db = require __DIR__ . '/db.php';
 
 $config = [
     'id' => 'basic',
+    'name' => 'Book Catalog',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'aliases' => [
@@ -62,6 +63,20 @@ $config = [
         ],
     ],
     'params' => $params,
+    // DI container — аналог services.yaml в Symfony.
+    // singletons: один экземпляр на весь запрос (как scope: singleton).
+    'container' => [
+        'singletons' => [
+            \app\services\SmsPilotService::class => function () use ($params) {
+                return new \app\services\SmsPilotService($params['smsPilotApiKey'] ?? '');
+            },
+            \app\services\NotificationService::class => function () use ($params) {
+                return new \app\services\NotificationService(
+                    Yii::$container->get(\app\services\SmsPilotService::class)
+                );
+            },
+        ],
+    ],
 ];
 
 if (YII_ENV_DEV) {

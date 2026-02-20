@@ -5,17 +5,26 @@ namespace app\controllers;
 use Yii;
 use app\models\Book;
 use app\models\Author;
-use app\models\Subscription;
-use app\services\SmsPilotService;
+use app\services\NotificationService;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
+use yii\base\Module;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 
 class BookController extends Controller
 {
+    public function __construct(
+        string $id,
+        Module $module,
+        private readonly NotificationService $notificationService,
+        array $config = []
+    ) {
+        parent::__construct($id, $module, $config);
+    }
+
     public function behaviors(): array
     {
         return [
@@ -98,7 +107,7 @@ class BookController extends Controller
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($model->imageFile) {
-                        $uploadPath = Yii::getAlias('@webroot/uploads/books/');
+                        $uploadPath = Book::getUploadDir();
                         $fileName = uniqid('book_') . '.' . $model->imageFile->extension;
                         if (!$model->imageFile->saveAs($uploadPath . $fileName)) {
                             throw new \RuntimeException('Failed to save cover image.');
@@ -113,7 +122,7 @@ class BookController extends Controller
                     $model->saveAuthors($authorIds);
                     $transaction->commit();
 
-                    $this->notifySubscribers($model, $authorIds);
+                    $this->notificationService->notifyAboutNewBook($model, $authorIds);
                     Yii::$app->session->setFlash('success', 'Book created successfully.');
                     return $this->redirect(['view', 'id' => $model->id]);
                 } catch (\Exception $e) {
@@ -150,7 +159,7 @@ class BookController extends Controller
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($model->imageFile) {
-                        $uploadPath = Yii::getAlias('@webroot/uploads/books/');
+                        $uploadPath = Book::getUploadDir();
                         $fileName = uniqid('book_') . '.' . $model->imageFile->extension;
                         if (!$model->imageFile->saveAs($uploadPath . $fileName)) {
                             throw new \RuntimeException('Failed to save cover image.');
@@ -186,7 +195,7 @@ class BookController extends Controller
         $model = $this->findModel($id);
 
         if ($model->cover_image) {
-            $path = Yii::getAlias('@webroot/uploads/books/') . $model->cover_image;
+            $path = Book::getUploadDir() . $model->cover_image;
             if (is_file($path)) {
                 unlink($path);
             }
@@ -206,26 +215,5 @@ class BookController extends Controller
         return $model;
     }
 
-    private function notifySubscribers(Book $book, array $authorIds): void
-    {
-        if (empty($authorIds)) {
-            return;
-        }
 
-        $subscriptions = Subscription::find()
-            ->where(['author_id' => $authorIds])
-            ->with('author')
-            ->all();
-
-        if (empty($subscriptions)) {
-            return;
-        }
-
-        // TODO: make smsServiceInterface AND make this send through queue
-        $sms = new SmsPilotService();
-        foreach ($subscriptions as $subscription) {
-            $message = "New book: \"{$book->title}\" ({$book->year}) by {$subscription->author->full_name}";
-            $sms->send($subscription->phone, $message);
-        }
-    }
 }

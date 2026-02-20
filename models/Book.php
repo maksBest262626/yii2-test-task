@@ -2,11 +2,14 @@
 
 namespace app\models;
 
+use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 
 class Book extends ActiveRecord
 {
+    const COVER_DIR = 'uploads/books';
+
     public $imageFile = null;
     public $author_ids = [];
 
@@ -32,7 +35,7 @@ class Book extends ActiveRecord
             ['isbn', 'string', 'max' => 20],
             ['cover_image', 'string', 'max' => 255],
             ['author_ids', 'safe'],
-            ['imageFile', 'file', 'extensions' => 'jpg, jpeg, png, gif', 'skipOnEmpty' => true, 'checkExtensionByMimeType' => false],
+            ['imageFile', 'file', 'extensions' => 'jpg, jpeg, png, gif', 'skipOnEmpty' => true],
         ];
     }
 
@@ -51,6 +54,20 @@ class Book extends ActiveRecord
         ];
     }
 
+    /** Web URL для обложки, либо null если обложки нет. */
+    public function getCoverUrl(): ?string
+    {
+        return $this->cover_image
+            ? Yii::getAlias('@web') . '/' . self::COVER_DIR . '/' . $this->cover_image
+            : null;
+    }
+
+    /** Абсолютный путь к папке загрузок на сервере (с завершающим слешем). */
+    public static function getUploadDir(): string
+    {
+        return Yii::getAlias('@webroot') . '/' . self::COVER_DIR . '/';
+    }
+
     public function getAuthors()
     {
         return $this->hasMany(Author::class, ['id' => 'author_id'])
@@ -62,9 +79,9 @@ class Book extends ActiveRecord
         return $this->getAuthors()->select('id')->column();
     }
 
-    public function saveAuthors($authorIds): void
+    public function saveAuthors(array $authorIds): void
     {
-        $authorIds = array_filter(array_map('intval', (array)$authorIds));
+        $authorIds = array_filter(array_map('intval', $authorIds));
         \Yii::$app->db->createCommand()->delete('{{%book_author}}', ['book_id' => $this->id])->execute();
         if (!empty($authorIds)) {
             $rows = [];

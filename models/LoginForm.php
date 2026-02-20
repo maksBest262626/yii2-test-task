@@ -11,7 +11,7 @@ class LoginForm extends Model
     public string $password = '';
     public bool $rememberMe = true;
 
-    private $_user = false;
+    private User|null|false $_user = false;
 
     public function rules(): array
     {

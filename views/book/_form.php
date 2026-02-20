@@ -25,10 +25,10 @@ $selectedAuthorIds = $model->author_ids;
 
     <?= $form->field($model, 'imageFile')->fileInput() ?>
 
-    <?php if ($model->cover_image): ?>
+    <?php if ($model->coverUrl): ?>
         <div class="mb-3">
             <label class="form-label">Current Cover</label><br>
-            <img src="<?= \yii\helpers\Html::encode('/uploads/books/' . $model->cover_image) ?>"
+            <img src="<?= Html::encode($model->coverUrl) ?>"
                  alt="Cover" style="max-height: 150px;">
         </div>
     <?php endif ?>

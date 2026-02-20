@@ -24,9 +24,9 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <div class="row">
-        <?php if ($model->cover_image): ?>
+        <?php if ($model->coverUrl): ?>
             <div class="col-md-3">
-                <img src="<?= Html::encode('/uploads/books/' . $model->cover_image) ?>"
+                <img src="<?= Html::encode($model->coverUrl) ?>"
                      class="img-fluid rounded" alt="Cover">
             </div>
             <div class="col-md-9">

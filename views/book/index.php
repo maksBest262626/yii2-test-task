@@ -41,8 +41,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php foreach ($dataProvider->models as $book): ?>
                 <div class="col">
                     <div class="card h-100">
-                        <?php if ($book->cover_image): ?>
-                            <img src="<?= Html::encode('/uploads/books/' . $book->cover_image) ?>"
+                        <?php if ($book->coverUrl): ?>
+                            <img src="<?= Html::encode($book->coverUrl) ?>"
                                  class="card-img-top" alt="Cover" style="max-height: 200px; object-fit: cover;">
                         <?php endif ?>
                         <div class="card-body">
